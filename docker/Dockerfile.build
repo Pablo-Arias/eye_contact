@@ -1,0 +1,24 @@
+###############################################################################
+# 1.  Builder – full tool-chain, CUDA headers, Maxine SDK, Meson
+###############################################################################
+FROM ducksouplab/debian-gstreamer:deb12-cuda12.2-plugins-gst1.24.10 AS builder
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential ninja-build meson git pkg-config \
+        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+# --- Maxine AR SDK ----------------------------------------------------------
+COPY deps/maxine-ar-sdk-linux-*.tar.gz /tmp/maxine.tgz
+RUN mkdir -p /opt/nvidia && \
+    tar -xzf /tmp/maxine.tgz -C /opt/nvidia && \
+    ln -s /opt/nvidia/maxine-ar-sdk*/ /opt/nvidia/ar_sdk
+
+ENV NVAR_SDK_PATH=/opt/nvidia/ar_sdk
+ENV LD_LIBRARY_PATH=$NVAR_SDK_PATH/lib:$LD_LIBRARY_PATH
+
+# --- source ----------------------------------------------------------------
+WORKDIR /work
+COPY . .
+RUN meson setup build && \
+    meson compile -C build && \
+    meson install -C build --destdir /stage

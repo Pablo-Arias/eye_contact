@@ -1,0 +1,21 @@
+###############################################################################
+# 2.  Runtime – only the pieces the plug-in needs
+###############################################################################
+FROM ducksouplab/debian-gstreamer:deb12-cuda12.2-plugins-gst1.24.10
+LABEL maintainer="Pablo Arias Sarah"
+
+# Copy plug-in + Maxine runtime libs + models from the builder
+COPY --from=builder /stage/usr/local/lib/gstreamer-1.0/libgsteyecontact.so \
+                    /usr/local/lib/gstreamer-1.0/
+COPY --from=builder /opt/nvidia/ar_sdk/lib/libnvar.so \
+                    /opt/nvidia/ar_sdk/lib/libnvcvapi.so \
+                    /opt/nvidia/ar_sdk/lib/
+COPY --from=builder /opt/nvidia/ar_sdk/models/eyecontact/* \
+                    /opt/nvidia/ar_sdk/models/eyecontact/
+
+ENV LD_LIBRARY_PATH=/opt/nvidia/ar_sdk/lib:$LD_LIBRARY_PATH
+ENV GST_PLUGIN_PATH=/usr/local/lib/gstreamer-1.0
+
+# Small helper entrypoint
+COPY docker/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

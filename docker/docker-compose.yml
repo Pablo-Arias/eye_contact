@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.runtime   # triggers multi-stage
+    image: ducksouplab/eyecontact:latest
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - GST_DEBUG=2
+    command: ["bash"]
+    volumes:
+      - ../media:/media   # sample volume mount for tests
